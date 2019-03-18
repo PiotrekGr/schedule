@@ -1,10 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<!-- templates/home.html -->
+{% extends 'base.html' %}
 
-</body>
-</html>
+{% block title %}Users' list{% endblock %}
+
+{% block content %}
+<table>
+    <th>
+        <th> username</th>
+        <th> last_login</th>
+        <th> is_superuser</th>
+        <th> first_name</th>
+        <th> last_name</th>
+        <th> email</th>
+        <th> is_staff</th>
+        <th> is_active</th>
+        <th> date_joined</th>
+        <th> password</th>
+    </th>
+
+{% for u in users %}
+    <tr>
+        <td> {{ u.id }}</td>
+        <td> {{ u.username }}</td>
+        <td> {{ u.last_login }}</td>
+        <td> {{ u.is_superuser }}</td>
+        <td> {{ u.first_name }}</td>
+        <td> {{ u.last_name}}</td>
+        <td> {{ u.email }}</td>
+        <td> {{ u.is_staff }}</td>
+        <td> {{ u.is_active }}</td>
+        <td> {{ u.date_joined }}</td>
+        <td> {{ u.password }}</td>
+    </tr>
+{% endfor %}
+</table>
+<h3> session:</h3>
+<p> {{ session }}</p>
+<h3> cookies:</h3>
+<p> {{ cookies }}</p>
+{% endblock %}
