@@ -25,7 +25,7 @@ class Activities(models.Model):
     priority = models.IntegerField()
     assumed_time = models.FloatField()
     applied_time = models.FloatField()
-    color = models.CharField(choices=COLORS) # todo nadpisać str, żeby wyświetłały się nazwy kolorów
+    color = models.IntegerField(choices=COLORS) # todo nadpisać str, żeby wyświetłały się nazwy kolorów
 
 
 class Availability(models.Model):
