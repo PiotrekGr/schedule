@@ -1,0 +1,35 @@
+<!-- templates/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}Plan details {% endblock %}
+
+{% block content %}
+
+<p> activities </p>
+<table>
+    <tr>
+        <th> user id </th>
+        <th> plan id </th>
+        <th> starting date </th>
+        <th> created </th>
+        <th> modified </th>
+        <th></th>
+    </tr>
+
+{% for p in plans %}
+    <tr>
+
+        <td> {{ p.user.id }}</td>
+        <td> {{ p.id }}</td>
+        <td> {{ p.start_date }}</td>
+        <td> {{ p.created }}</td>
+        <td> {{ p.modified}}</td>
+        <td> <a href="/rotw/{{ p.user.id }}/{{ p.id }}"> edit </a> </td>
+    </tr>
+{% endfor %}
+</table>
+
+<p> avaialability </p>
+
+
+{% endblock %}

@@ -14,10 +14,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.generic import TemplateView
+from django.conf.urls import url
 
-from main.views import CheckUser
+
+from main.views import CheckUser, UserView, PlanView, ActivityView, RemoveActivityView, RemoveAvailabilityView, \
+    AvailabilityView, PlanDetailsView, ScheduleRecalculation
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +28,12 @@ urlpatterns = [
     path('rotw/', include('django.contrib.auth.urls')),
     path('rotw/home/', TemplateView.as_view(template_name='home.html'), name='home'),
     path('check/', CheckUser.as_view()),
-    # re_path(r'^rotw/(?P<id>(\d)+)$', UserView.as_view()),
+    re_path(r'^rotw/(?P<id>(\d)+)$', UserView.as_view()),
+    re_path(r'^rotw/(?P<u_id>(\d)+)/(?P<p_id>(\d)+)$', PlanView.as_view()),
+    re_path(r'^rotw/activity/(?P<id>(\d)+)$', ActivityView.as_view()),
+    re_path(r'^rotw/availability/(?P<id>(\d)+)$', AvailabilityView.as_view()),
+    url(r'^rotw/activity/remove/(?P<pk>(\d)+)$', RemoveActivityView.as_view()),
+    url(r'^rotw/availability/remove/(?P<pk>(\d)+)$', RemoveAvailabilityView.as_view()),
+    url(r'^rotw/schedule_details/(?P<u_id>(\d)+)/(?P<p_id>(\d)+)$', PlanDetailsView.as_view()),
+    url(r'^rotw/schedule_recalculation/(?P<u_id>(\d)+)/(?P<p_id>(\d)+)$', ScheduleRecalculation.as_view()),
 ]

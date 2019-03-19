@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <p> Are you sure you want to delete following time slot? </p>
+        <form action="" method="post">
+        {%  csrf_token %}
+        <p> day: {{ object.day}}</p>
+        <p> start: {{ object.start_time}}</p>
+        <p>end: {{ object.end_time}}</p>
+        <p>duration: {{ object.duration}}</p>
+        <input type="submit" value="delete">
+        </form>
+{% endblock %}
+

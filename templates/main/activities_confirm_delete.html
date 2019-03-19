@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <p> Are you sure you want to delete following activity? </p>
+        <form action="" method="post">
+        {%  csrf_token %}
+        <p> name: {{ object.name }}</p>
+        <p> description: {{ object.description}}</p>
+        <p>priority: {{ object.priority }}</p>
+        <p>time: {{ object.assumed_time}}</p>
+        <p>color: {{ object.color}}</p>
+        <input type="submit" value="delete">
+        </form>
+{% endblock %}
+

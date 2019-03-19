@@ -130,7 +130,7 @@ def create_schedule(tab, available_time):
     for a in result:
         repeat = int(a.recalculated_time_rounded*2)
         for i in range(repeat):
-            schedule.append(a.activity_id)
+            schedule.append(a.id)
     random.shuffle(schedule)
     return schedule
 #
@@ -140,5 +140,5 @@ def create_schedule(tab, available_time):
 #     print(a.activity_id)
 
 
-print(create_schedule(activities, 300))
-print(len(create_schedule(activities, 300)))
+print(create_schedule(activities, 9))
+print(len(create_schedule(activities, 9)))
