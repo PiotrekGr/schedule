@@ -1,7 +1,8 @@
-from datetime import datetime
+import datetime
 
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import request, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
@@ -218,8 +219,37 @@ class RemoveAvailabilityView(DeleteView):
 
 class PlanDetailsView(View):
     def get(self, request, u_id, p_id):
-        schedule = Schedule.objects.get(plan_id=p_id)
-        return render(request, 'schedule.html', {'schedule': schedule})
+        schedule = Schedule.objects.filter(plan_id=p_id)
+        user = User.objects.get(id=u_id)
+        plan = Plan.objects.get(id=p_id)
+
+        graph = []
+        for day in range(1,8):
+            graph_day = []
+            for slot in range(14,44):
+                try:
+                    a=Schedule.objects.get(plan__id=p_id, slot__day=day, start_time=slot)
+                    graph_day.append((
+                        day,
+                        datetime.timedelta(minutes=slot*30),
+                        a.activity.name,
+                        a.activity.get_color_display()
+                    ))
+                except ObjectDoesNotExist:
+                    graph_day.append((
+                        day,
+                        datetime.timedelta(minutes=slot*30),
+                        '',
+                        'white'
+                    ))
+            graph.append(graph_day)
+        from pprint import pprint
+        pprint(graph)
+
+        return render(request, 'schedule.html', {'schedule': schedule,
+                                                 'user': user,
+                                                 'plan': plan,
+                                                 'graph': graph})
 
 
 class ScheduleRecalculation(View):
@@ -255,6 +285,7 @@ class ScheduleRecalculation(View):
                                         slot=slot,
                                         order=i,
                                         activity=act,
+                                        start_time=slot.start_time+i,
                                         duration=0.5)
                 act.applied_time = act.applied_time + 0.5
                 act.save()
@@ -265,4 +296,5 @@ class ScheduleRecalculation(View):
         return render(request, "schedule_recalculation.html", {'act_sequence': act_sequence,
                                                                'schedule': schedule,
                                                                'activities': activities,
-                                                               'user': user})
+                                                               'user': user,
+                                                               'plan': plan})

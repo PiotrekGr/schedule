@@ -108,6 +108,7 @@ class Schedule(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
     slot = models.ForeignKey(Availability, on_delete=models.CASCADE)
+    start_time = models.IntegerField(choices=TIME)
     activity = models.ForeignKey(Activities, on_delete=models.CASCADE)
     order = models.IntegerField()
     duration = models.FloatField() # todo wartości zaokrąglone do połówek

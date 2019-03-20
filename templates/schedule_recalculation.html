@@ -15,7 +15,7 @@
         <th> priority </th>
         <th> time (aspirational) </th>
         <th> time (applied) </th>
-        <th> reduction </th>
+        <th> reduction (%) </th>
 
     </tr>
 
@@ -27,7 +27,11 @@
         <td> {{a.priority }}</td>
         <td> {{a.assumed_time }}</td>
         <td> {{a.applied_time }}</td>
-        <td> {{a.applied_time|div:a.assumed_time|sub:1}}</td>
+        <td>
+            {% with figure=a.applied_time|div:a.assumed_time|sub:1|mul:100 %}
+            {{ figure|floatformat:"0" }}
+            {% endwith %}%
+        </td>
     </tr>
 {% endfor %}
 </table>
@@ -46,7 +50,7 @@
 {% for s in schedule %}
     <tr>
         <td> {{s.slot.day}}</td>
-        <td> {{s.slot.get_start_time_display}}</td>
+        <td> {{s.get_start_time_display}}</td>
         <td> {{s.activity.id}}</td>
         <td> {{s.activity.name  }}</td>
         <td> {{s.activity.description}} </td>
@@ -55,6 +59,7 @@
 {% endfor %}
 </table>
 
+<p><a href="/rotw/{{ user.id }}/{{ plan.id }}"> go back to activities and time slots in this plan </a></p>
 <p><a href="/rotw/{{ user.id }}"> go back to all my plans </a></p>
 
 

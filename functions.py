@@ -139,6 +139,6 @@ def create_schedule(tab, available_time):
 # for a in create_schedule(activities, 45):
 #     print(a.activity_id)
 
-
-print(create_schedule(activities, 9))
-print(len(create_schedule(activities, 9)))
+#
+# print(create_schedule(activities, 9))
+# print(len(create_schedule(activities, 9)))

@@ -10,6 +10,23 @@
 
 <p> schedule </p>
 
+
+
+
+{% for day in graph %}
+
+    <div>
+        {% for day, slot, activity, color in day %}
+            <p class="schedule" style="background-color:{{ color }}">
+                <span style="font-size: x-small">{{ slot }}</span> <br>{{ activity }}
+            </p>
+
+        {%  endfor %}
+    </div>
+
+{% endfor %}
+
+
 <table>
     <tr>
         <th> day  </th>
@@ -20,15 +37,15 @@
 
 {% for a in schedule %}
     <tr>
-        <th> {{schedule.availability.day  }}</th>
-        <th> {{schedule.availability.start_time }} </th>
-        <th> {{schedule.order }}</th>
-        <th> {{schedule.activity.name}} </th>
+        <th> {{a.slot.day  }}</th>
+        <th> {{a.get_start_time_display}} </th>
+        <th> {{a.order }}</th>
+        <th> {{a.activity.name}} </th>
 
     </tr>
 {% endfor %}
 </table>
 
-<p><a href="rotw/schedule_recalculation/{{ schedule.user.id }}/{{ schedule.plan.id }}">recalculate results</a></p>
+<p><a href="/rotw/schedule_recalculation/{{ user.id }}/{{ plan.id }}">recalculate results</a></p>
 
 {% endblock %}
