@@ -1,8 +1,57 @@
-p.schedule{
-	display: inline-block;
-	width: 40px;
-	height: 80px;
+.header_schedule{
+    font-family: 'Allura', cursive;
+    font-size: 60px;
+    color:tomato;
+}
+
+.header_rotweiler{
+    font-family: 'Syncopate', sans-serif;
+    font-size: 60px;
+    background-color: tomato;
     color: white;
 
+}
+
+.table_header{
+    background-color: grey;
+    color: white;
+}
+
+p.schedule{
+	display: inline-block;
+	width: 33.5px;
+	height: 60px;
+    color: white;
+    text-align: center;
+    word-wrap: break-word;
+    font-size: 12px;
+    vertical-align: center;
+    overflow: hidden;
+
 	/*border: 2px dotted red;*/
+}
+
+div.schedule{
+    font-size: 12px;
+    padding-top: 8px;
+    border: 1px solid lightgrey;
+    height: 80px;
+}
+
+.regular {
+    margin-left: 50px;
+}
+
+.tom_bold{
+    color: tomato;
+    font-weight: bold;
+}
+
+.tom_xlarge{
+    color: tomato;
+    font-size: x-large;
+}
+
+.back_tomato{
+    background-color: tomato;
 }

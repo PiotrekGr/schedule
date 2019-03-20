@@ -5,79 +5,96 @@
 
 {% block content %}
 
-<p> user: {{ user.username }}</p>
-<p> plan starting {{ plan.start_date }}</p>
+<p class="regular"> <span class="tom_bold"> user: </span>{{ user.username }}</p>
+<p class="regular"> <span class="tom_bold"> plan starting </span>{{ plan.start_date }}</p>
 
-<p> activities included in the plan </p>
+<p class="regular back_tomato">{{ m }}</p>
+
+<div style="vertical-align: text-top">
+    <div style="display: inline-block" class="regular">
+        <p class="tom_xlarge"> activities included in the plan </p>
+
+        <table class="table" style="width: 1000px">
+            <tr class="table_header">
+                <th> short name </th>
+                <th> description </th>
+                <th> priority </th>
+                <th> hours (aspirational) </th>
+                <th> displayed color </th>
+                <th></th>
+                <th></th>
+            </tr>
+
+        {% for a in plan_act %}
+            <tr>
+                <td> {{ a.name }} </td>
+                <td> {{ a.description}} </td>
+                <td> {{ a.priority}} </td>
+                <td> {{ a.assumed_time}} </td>
+                <td> {{ a.get_color_display }} </td>
+                <td> <a href="/rotw/activity/{{ a.id }}"> edit </a> </td>
+                <td> <a href="/rotw/activity/remove/{{ a.id }}"> delete </a> </td>
+
+            </tr>
+        {% endfor %}
+        </table>
+        <p class="table-danger"> initial time for all activities = {{ sum_act }} hours</p>
+    </div>
+
+    <div style="display: inline-block" class="regular">
+        <p class="tom_xlarge"> add new activity </p>
+        <form method="post">
+                {%  csrf_token %}
+                {{ form_act.as_p }}
+                <input type="submit" value="add activity" name="submit" class="back_tomato">
+        </form>
+
+    </div>
+</div>
 
 
-<table>
-    <tr>
-        <th> short name </th>
-        <th> description </th>
-        <th> priority </th>
-        <th> hours (aspirational) </th>
-    </tr>
 
-{% for a in plan_act %}
-    <tr>
-        <td> {{ a.name }} </td>
-        <td> {{ a.description}} </td>
-        <td> {{ a.priority}} </td>
-        <td> {{ a.assumed_time}} </td>
-        <td> {{ a.id }} </td>
-        <td> <a href="/rotw/activity/{{ a.id }}"> edit </a> </td>
-        <td> <a href="/rotw/activity/remove/{{ a.id }}"> delete </a> </td>
+<div>
+    <div style="display:inline-block;" class="regular">
+        <p class="tom_xlarge"> available time slots </p>
+        <table class="table" style="width: 1000px">
+            <tr  class="table_header">
+                <th> day </th>
+                <th> start time</th>
+                <th> end time </th>
+                <th> duration </th>
+                <th></th>
+                <th></th>
+            </tr>
 
-    </tr>
-{% endfor %}
-</table>
-<p> initial time for all activities = {{ sum_act }}</p>
+        {% for a in plan_ava %}
+            <tr>
+                <td> {{ a.day}} </td>
+                <td> {{ a.get_start_time_display}} </td>
+                <td> {{ a.get_end_time_display}} </td>
+                <td> {{ a.duration|floatformat:1}} </td>
+                <td> <a href="/rotw/availability/{{ a.id }}"> edit </a> </td>
+                <td> <a href="/rotw/availability/remove/{{ a.id }}"> delete </a> </td>
 
+            </tr>
+        {% endfor %}
+        </table>
+        <p class="table-danger"> available time = {{ sum_ava }} hours</p>
+    </div>
 
-<p> add new activity </p>
-<form method="post">
-    {%  csrf_token %}
-    {{ form_act.as_p }}
-    <input type="submit" value="add activity" name="submit">
-</form>
+    <div style="display:inline-block" class="regular">
+        <p class="tom_xlarge">add available time slot</p>
+        <form method="post">
+        {%  csrf_token %}
+        {{ form_ava.as_p }}
+        <input type="submit" value="add time slot" name="submit" class="back_tomato">
+        </form>
 
-
-
-
-<p> available time slots </p>
-
-
-<table>
-    <tr>
-        <th> day </th>
-        <th> start_time </th>
-        <th> end_time </th>
-        <th> duration </th>
-    </tr>
-
-{% for a in plan_ava %}
-    <tr>
-        <td> {{ a.day}} </td>
-        <td> {{ a.get_start_time_display}} </td>
-        <td> {{ a.get_end_time_display}} </td>
-        <td> {{ a.duration|floatformat:1}} </td>
-        <td> <a href="/rotw/availability/{{ a.id }}"> edit </a> </td>
-        <td> <a href="/rotw/availability/remove/{{ a.id }}"> delete </a> </td>
-
-    </tr>
-{% endfor %}
-</table>
-<p> available time = {{ sum_ava }}</p>
-
-    <form method="post">
-    {%  csrf_token %}
-    {{ form_ava.as_p }}
-    <input type="submit" value="add time slot" name="submit">
-</form>
+    </div>
+</div>
 
 <p></p>
-    <h2><a href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}">see the schedule</a></h2>
-    <h2><a href="/rotw/schedule_recalculation/{{ user.id }}/{{ plan.id }}">recalculate the schedule</a></h2>
+    <p class="regular"><a href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}">see the schedule</a></p>
+    <p class="regular"><a href="/rotw/schedule_recalculation/{{ user.id }}/{{ plan.id }}">recalculate the schedule</a></p>
 
 {% endblock %}

@@ -1,51 +1,93 @@
 <!-- templates/home.html -->
 {% extends 'base.html' %}
+{% load mathfilters %}
+{% load timedelta_filter %}
 
 {% block title %}Schedule details {% endblock %}
 
 {% block content %}
 
-<p> user: {{ schedule.user.username }}</p>
-<p> plan starting {{ schedule.plan.start_date }}</p>
+<p class="container"> <span class="tom_bold">user: </span>{{ user.username }}</p>
+<p class="container"> <span class="tom_bold">plan starting </span>{{ plan.start_date }}</p>
 
-<p> schedule </p>
-
-
-
+<h3 class="container tom_xlarge"> schedule </h3>
 
 {% for day in graph %}
-
-    <div>
+    <div class="container" style="font-size: 12x">{{ day.0.0 }}</div>
+    <p></p>
+    <div class="schedule container">
         {% for day, slot, activity, color in day %}
             <p class="schedule" style="background-color:{{ color }}">
-                <span style="font-size: x-small">{{ slot }}</span> <br>{{ activity }}
+                <span style="font-size: 8px">{{ slot }}</span> <br>{{ activity }}
             </p>
 
         {%  endfor %}
     </div>
-
+    <p></p>
 {% endfor %}
 
+<p class=" regular"><a class="container" href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}?val=true">recalculate the schedule</a></p>
+<p class=" regular"><a class="container" href="/rotw/{{ user.id }}/{{ plan.id }}"> go back to activities and time slots in this plan </a></p>
+<p class=" regular"><a class="container" href="/rotw/{{ user.id }}"> go back to all my plans </a></p>
 
-<table>
-    <tr>
-        <th> day  </th>
-        <th> hour </th>
-        <th> order </th>
-        <th> activity </th>
+
+<p class="container tom_xlarge"> summary of time allocated to specific activities </p>
+<table class="table container">
+    <tr class="table_header">
+        <th> id  </th>
+        <th> name  </th>
+        <th> description </th>
+        <th> priority </th>
+        <th> time (aspirational) </th>
+        <th> time (applied) </th>
+        <th> reduction (%) </th>
+
     </tr>
 
-{% for a in schedule %}
+{% for a in activities %}
     <tr>
-        <th> {{a.slot.day  }}</th>
-        <th> {{a.get_start_time_display}} </th>
-        <th> {{a.order }}</th>
-        <th> {{a.activity.name}} </th>
-
+        <td> {{a.id}}</td>
+        <td> {{a.name  }}</td>
+        <td> {{a.description}} </td>
+        <td> {{a.priority }}</td>
+        <td> {{a.assumed_time }}</td>
+        <td> {{a.applied_time }}</td>
+        <td>
+            {% with figure=a.applied_time|div:a.assumed_time|sub:1|mul:100 %}
+            {{ figure|floatformat:"0" }}
+            {% endwith %}%
+        </td>
     </tr>
 {% endfor %}
 </table>
 
-<p><a href="/rotw/schedule_recalculation/{{ user.id }}/{{ plan.id }}">recalculate results</a></p>
+<p class="container tom_xlarge" > weekly schedule details</p>
+<table class="table container">
+    <tr class="table_header">
+        <th> day  </th>
+        <th> starting time  </th>
+        <th> id  </th>
+        <th> name  </th>
+        <th> description </th>
+        <th> priority </th>
+    </tr>
+
+{% for s in schedule %}
+    <tr>
+        <td> {{s.slot.day}}</td>
+        <td> {{s.get_start_time_display}}</td>
+        <td> {{s.activity.id}}</td>
+        <td> {{s.activity.name  }}</td>
+        <td> {{s.activity.description}} </td>
+        <td> {{s.activity.priority }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+
+
+
+
+
 
 {% endblock %}

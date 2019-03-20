@@ -6,11 +6,16 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 COLORS = (          # todo przygotować paletę kolorów https://farbelous.io/bootstrap-colorpicker/
-    (1, 'blue'),
-    (2, 'green'),
-    (3, 'red'),
-    (4, 'yellow'),
-    (5, 'violet'),
+    (1, 'CadetBlue'),
+    (2, 'Coral'),
+    (3, 'CornFlowerBlue'),
+    (4, 'Crimson'),
+    (5, 'PaleVioletRed'),
+    (6, 'LightBlue'),
+    (7, 'DarkKhaki'),
+    (8, 'DarkGoldenRod'),
+    (9, 'LightSeaGreen'),
+    (10, 'Olive'),
 )
 
 

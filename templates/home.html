@@ -5,10 +5,12 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-  Hi {{ user.username }}!
+    <p> Hi {{ user.username }}! </p>
+    <p> <a href="/rotw/{{ user.id }}"> check your schedules </a></p>
   <p><a href="{% url 'logout' %}">logout</a></p>
 {% else %}
-  <p>You are not logged in</p>
-  <a href="{% url 'login' %}">login</a>
+    <p>You are not logged in</p>
+    <p><a href="{% url 'login' %}">login</a></p>
+    <p><a href="{% url 'signup' %}">register</a></p>
 {% endif %}
 {% endblock %}

@@ -6,10 +6,20 @@
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="{% static "css/style.css" %}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Allerta|Allura|Staatliches|Syncopate" rel="stylesheet">
     <title>{% block title %}Django Auth Tutorial{% endblock %}</title>
 </head>
 <body>
     <main>
+        <div class="container" style="width: 1600px">
+            <p style="vertical-align: center">
+                <span class="header_schedule">schedule</span>
+                <span class="header_rotweiler">rotweiler</span>
+            </p>
+            <p></p>
+        </div>
+
         {% block content %}
         {% endblock %}
     </main>

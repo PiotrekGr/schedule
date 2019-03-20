@@ -50,6 +50,11 @@ class UserView(View):
 
 class PlanView(View):
     def get(self, request, u_id, p_id):
+        val = request.GET.get('val')
+        if val == "time":
+            m = "Available time is higher than time assigned to all activities, please modify the assumptions"
+        else:
+            m = ""
         plan_act = Activities.objects.filter(plan_id=p_id)
         plan_ava = Availability.objects.filter(plan_id=p_id)
         form_act = AddActivity()
@@ -72,7 +77,8 @@ class PlanView(View):
                                                   'sum_act': sum_act,
                                                   'sum_ava': sum_ava,
                                                   'plan': plan,
-                                                  'user': user})
+                                                  'user': user,
+                                                  'm': m})
 
     def post(self,request, u_id, p_id):
         plan_act = Activities.objects.filter(plan_id=p_id)
@@ -219,37 +225,90 @@ class RemoveAvailabilityView(DeleteView):
 
 class PlanDetailsView(View):
     def get(self, request, u_id, p_id):
+        val = request.GET.get('val')
+        if val == "true":
+            activities = Activities.objects.filter(plan_id=p_id)
+            availability = Availability.objects.filter(plan_id=p_id)
+            user = User.objects.get(id=u_id)
+            plan = Plan.objects.get(id=p_id)
+
+            sum_ava = 0
+            for slot in availability:
+                sum_ava += slot.duration
+            act_sequence = create_schedule(activities, sum_ava)
+
+            if sum_ava > len(act_sequence)/2:
+                return HttpResponseRedirect('/rotw/{}/{}?val=time'.format(user.id, plan.id))
+
+            for a in activities:
+                a.applied_time = 0
+                a.save()
+
+            # usuń poprzedni schedule - do uzupełnienia
+
+            to_delete = Schedule.objects.filter(plan_id=p_id)
+            to_delete.delete()
+
+            # wypełnij schedule
+            j = 0
+            for slot in availability:
+                for i in range(int(slot.duration * 2)):
+                    act = Activities.objects.get(id=act_sequence[j])
+                    j += 1
+                    Schedule.objects.create(user=user,
+                                            plan=plan,
+                                            slot=slot,
+                                            order=i,
+                                            activity=act,
+                                            start_time=slot.start_time + i,
+                                            duration=0.5)
+                    act.applied_time = act.applied_time + 0.5
+                    act.save()
+
+            schedule = Schedule.objects.filter(plan_id=p_id)
+
+            # return render(request, "schedule_recalculation.html", {'act_sequence': act_sequence,
+            #                                                        'schedule': schedule,
+            #                                                        'activities': activities,
+            #                                                        'user': user,
+            #                                                        'plan': plan})
+
+        activities = Activities.objects.filter(plan_id=p_id)
         schedule = Schedule.objects.filter(plan_id=p_id)
         user = User.objects.get(id=u_id)
         plan = Plan.objects.get(id=p_id)
+        day = plan.start_date
+        # day_weekday = datetime.date.weekday(day)
 
         graph = []
-        for day in range(1,8):
+        for d in range(1,8):
+            day = plan.start_date+datetime.timedelta(days=(d-1))
+            day_weekday = day.strftime('%A')
+            day_label = day_weekday+"("+str(day)+")"
             graph_day = []
             for slot in range(14,44):
                 try:
-                    a=Schedule.objects.get(plan__id=p_id, slot__day=day, start_time=slot)
+                    a=Schedule.objects.get(plan__id=p_id, slot__day=d, start_time=slot)
                     graph_day.append((
-                        day,
+                        day_label,
                         datetime.timedelta(minutes=slot*30),
                         a.activity.name,
                         a.activity.get_color_display()
                     ))
                 except ObjectDoesNotExist:
                     graph_day.append((
-                        day,
+                        day_label,
                         datetime.timedelta(minutes=slot*30),
                         '',
                         'white'
                     ))
             graph.append(graph_day)
-        from pprint import pprint
-        pprint(graph)
 
         return render(request, 'schedule.html', {'schedule': schedule,
                                                  'user': user,
                                                  'plan': plan,
-                                                 'graph': graph})
+                                                 'graph': graph,
+                                                 'activities': activities})
 
 
 class ScheduleRecalculation(View):

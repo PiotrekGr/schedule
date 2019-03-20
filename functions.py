@@ -1,5 +1,5 @@
 import random
-
+from pprint import pprint
 import django
 django.setup()
 
@@ -43,7 +43,9 @@ def time_recalc(tab, available_time):
     # separate path in case time assigned for priority 10 activities surpasses available time
     #     checking if priority 10 alone exceeds time limit
     sum_10 = 0
+    sum_all = 0
     for row in tab:
+        sum_all+=row.assumed_time
         if row.priority == 10:
             sum_10 += row.assumed_time
 
@@ -58,7 +60,11 @@ def time_recalc(tab, available_time):
             else:
                 row.recalculated_time = 0
                 row.diff = 0
-        return activities
+        return tab
+    elif sum_all < available_time:
+        for row in tab:
+            row.recalculated_time=row.assumed_time
+        return tab
 # if there is still space for activities with lower priorities
     else:
         finished = False
@@ -86,42 +92,57 @@ def time_recalc(tab, available_time):
 
 
 def time_recalc_rounded(tab, available_time):
-    initial_result = time_recalc(tab, available_time)
-    sum_time_rounded = 0
-    for a in initial_result:
-        a.recalculated_time_rounded = round((a.recalculated_time*2),0)/2
-        a.round_diff = a.recalculated_time_rounded - a.recalculated_time
-        sum_time_rounded += a.recalculated_time_rounded
-    # checking sum after rounding
-    # print('initial', available_time)
-    # print('rounded', sum_time_rounded)
-
-    while available_time != sum_time_rounded:
-        diff_max = 0
-        diff_min = 0
-
-        # max and min is corrected by assigned priority - in order to adjust in accorh activities' importance in case of
-        # equal difference resulting from rounding
+    sum_all = 0
+    for row in tab:
+        sum_all += row.assumed_time
+    if sum_all < available_time:
+        for row in tab:
+            row.recalculated_time = row.assumed_time
+            row.recalculated_time_rounded=row.recalculated_time
+        return tab
+    elif sum_all == available_time:
+        for row in tab:
+            row.recalculated_time = row.assumed_time
+            row.recalculated_time_rounded=row.recalculated_time
+        return tab
+    else:
+        initial_result = time_recalc(tab, available_time)
+        sum_time_rounded = 0
         for a in initial_result:
-            diff_max = max(diff_max, a.round_diff - a.priority/10000)
-            diff_min = min(diff_min, a.round_diff - a.priority/10000)
+            a.recalculated_time_rounded = round((a.recalculated_time*2),0)/2
+            a.round_diff = a.recalculated_time_rounded - a.recalculated_time
+            sum_time_rounded += a.recalculated_time_rounded
+        # checking sum after rounding
+        # print('initial', available_time)
+        # print('rounded', sum_time_rounded)
 
-        if sum_time_rounded > available_time:
-            for a in initial_result:
-                if (a.round_diff - a.priority/10000) == diff_max:
-                    a.recalculated_time_rounded -= 0.5
-                    a.round_diff = a.recalculated_time_rounded - a.recalculated_time
-                    sum_time_rounded -= 0.5
-                    break
+        while available_time != sum_time_rounded:
+            diff_max = 0
+            diff_min = 0
 
-        if sum_time_rounded < available_time:
+            # max and min is corrected by assigned priority - in order to adjust in accorh activities' importance in case of
+            # equal difference resulting from rounding
             for a in initial_result:
-                if (a.round_diff - a.priority/10000) == diff_min:
-                    a.recalculated_time_rounded += 0.5
-                    a.round_diff = a.recalculated_time_rounded - a.recalculated_time
-                    sum_time_rounded += 0.5
-                    break
-    return initial_result
+                diff_max = max(diff_max, a.round_diff - a.priority/10000)
+                diff_min = min(diff_min, a.round_diff - a.priority/10000)
+
+            if sum_time_rounded > available_time:
+                for a in initial_result:
+                    if (a.round_diff - a.priority/10000) == diff_max:
+                        a.recalculated_time_rounded -= 0.5
+                        a.round_diff = a.recalculated_time_rounded - a.recalculated_time
+                        sum_time_rounded -= 0.5
+                        break
+
+            if sum_time_rounded < available_time:
+                for a in initial_result:
+                    if (a.round_diff - a.priority/10000) == diff_min:
+                        a.recalculated_time_rounded += 0.5
+                        a.round_diff = a.recalculated_time_rounded - a.recalculated_time
+                        sum_time_rounded += 0.5
+                        break
+
+        return initial_result
 
 
 def create_schedule(tab, available_time):
