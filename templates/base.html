@@ -12,13 +12,30 @@
 </head>
 <body>
     <main>
-        <div class="container" style="width: 1600px">
+        <div class="center">
             <p style="vertical-align: center">
                 <span class="header_schedule">schedule</span>
-                <span class="header_rotweiler">rotweiler</span>
+                <span class="header_rottweiler">rottweiler</span>
             </p>
             <p></p>
         </div>
+
+    <ul>
+        <li><a href='/rotw/home/'>Home</a></li>
+
+        {%  if user.id != None %}
+        <li>
+            <a href='/rotw/{{ user.id }}'>My plans</a>
+        </li>
+        <li><a href="{% url 'logout' %}">Log out</a></li>
+        {%  else %}
+        <li><a href="{% url 'login' %}">Log in</a></li>
+        <li><a href="{% url 'signup' %}">Register</a></li>
+        {%  endif %}
+
+
+    </ul>
+
 
         {% block content %}
         {% endblock %}

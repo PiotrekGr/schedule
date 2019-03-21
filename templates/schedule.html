@@ -18,7 +18,7 @@
     <div class="schedule container">
         {% for day, slot, activity, color in day %}
             <p class="schedule" style="background-color:{{ color }}">
-                <span style="font-size: 8px">{{ slot }}</span> <br>{{ activity }}
+                <span style="font-size: 11px">{{ slot }}</span> <br>{{ activity }}
             </p>
 
         {%  endfor %}
@@ -26,9 +26,38 @@
     <p></p>
 {% endfor %}
 
-<p class=" regular"><a class="container" href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}?val=true">recalculate the schedule</a></p>
-<p class=" regular"><a class="container" href="/rotw/{{ user.id }}/{{ plan.id }}"> go back to activities and time slots in this plan </a></p>
-<p class=" regular"><a class="container" href="/rotw/{{ user.id }}"> go back to all my plans </a></p>
+{#<p class=" regular"><a class="container" href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}?val=true">recalculate the schedule</a></p>#}
+{#<p class=" regular"><a class="container" href="/rotw/{{ user.id }}/{{ plan.id }}"> go back to activities and time slots in this plan </a></p>#}
+{#<p class=" regular"><a class="container" href="/rotw/{{ user.id }}"> go back to all my plans </a></p>#}
+
+<p></p>
+<p>
+    <a class="button center" href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}?val=true">
+        <button class="button center back_cadetblue t_center f_white">
+            recalculate the schedule
+        </button>
+    </a>
+</p>
+
+<p></p>
+<p>
+    <a class="button center" href="/rotw/{{ user.id }}/{{ plan.id }}">
+        <button class="button center back_grey t_center f_white">
+            go back to activities and time slots in this plan
+        </button>
+    </a>
+</p>
+
+<p></p>
+<p>
+    <a class="button center" href="/rotw/{{ user.id }}">
+        <button class="button center back_grey t_center f_white">
+            go back to all of my plans
+        </button>
+    </a>
+</p>
+
+
 
 
 <p class="container tom_xlarge"> summary of time allocated to specific activities </p>

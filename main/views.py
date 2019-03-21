@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django.views import generic, View
 from django.views.generic import DeleteView
 
-from functions import create_schedule, time_recalc_rounded, basic_time_recalc
+from functions import create_schedule, time_recalc_rounded, basic_time_recalc, time_format
 from main.forms import AddPlan, AddActivity, AddAvailability
 from main.models import Plan, Activities, Availability, Schedule
 
@@ -32,10 +32,14 @@ class CheckUser(View):
 class UserView(View):
     def get(self, request, id):
         plans = Plan.objects.filter(user_id=id) # todo wyjaśnić
+        today = datetime.date.today()
+        today_min6 = datetime.date.today()-datetime.timedelta(days=7)
         form = AddPlan()
         return render(request, 'user_summary.html', {'plans': plans,
-                                                     'user':User.objects.get(id=id).username,
-                                                     'form': form})
+                                                     'user': User.objects.get(id=id),
+                                                     'form': form,
+                                                     'today': today,
+                                                     'today_min6': today_min6})
 
     def post(self,request, id):
         form = AddPlan(request.POST)
@@ -61,6 +65,19 @@ class PlanView(View):
         form_ava = AddAvailability()
         user = User.objects.get(id=u_id)
         plan = Plan.objects.get(id=p_id)
+        today = datetime.date.today()
+
+        for a in plan_ava:
+            a.day_date = a.plan.start_date + datetime.timedelta(days=(a.day-1))
+            a.weekday = a.day_date.strftime('%A')
+            a.day_label = a.weekday+" ("+str(a.day_date)+")"
+            print(a.day_date, a.weekday, a.day_label)
+
+            # day = plan.start_date+datetime.timedelta(days=(d-1))
+            # day_weekday = day.strftime('%A')
+            # day_label = day_weekday+" ("+str(day)+")"
+
+
 
         sum_act = 0
         for a in plan_act:
@@ -70,6 +87,9 @@ class PlanView(View):
         for a in plan_ava:
             sum_ava += a.duration
 
+        f_weekday = plan.start_date.strftime('%A')
+        first_day = f_weekday+" ("+str(plan.start_date)+")"
+
         return render(request, 'plan_view.html', {'plan_act': plan_act,
                                                   'plan_ava': plan_ava,
                                                   'form_act': form_act,
@@ -78,11 +98,14 @@ class PlanView(View):
                                                   'sum_ava': sum_ava,
                                                   'plan': plan,
                                                   'user': user,
-                                                  'm': m})
+                                                  'm': m,
+                                                  'today': today,
+                                                  'first_day': first_day})
 
     def post(self,request, u_id, p_id):
         plan_act = Activities.objects.filter(plan_id=p_id)
         plan_ava = Availability.objects.filter(plan_id=p_id)
+        today = datetime.date.today()
         # activities
         user = User.objects.get(id=u_id)
         plan = Plan.objects.get(id=p_id)
@@ -139,6 +162,9 @@ class PlanView(View):
         for a in plan_ava:
             sum_ava += a.duration
 
+        f_weekday = plan.start_date.strftime('%A')
+        first_day = f_weekday+" ("+str(plan.start_date)+")"
+
         return render(request, 'plan_view.html', {'plan_act': plan_act,
                                                   'form_act': form_act,
                                                   'sum_act': sum_act,
@@ -146,7 +172,9 @@ class PlanView(View):
                                                   'plan_ava': plan_ava,
                                                   'form_ava': form_ava,
                                                   'plan': plan,
-                                                  'user': user})
+                                                  'user': user,
+                                                  'today': today,
+                                                  'first_day': first_day})
 
 
 
@@ -207,6 +235,13 @@ class AvailabilityView(View):
             availability.duration =(int(end_time)-int(start_time))/2
             availability.save()
         return HttpResponseRedirect("/rotw/{}/{}".format(user_id, plan_id))
+
+
+class RemovePlanView(DeleteView):
+    model = Plan
+
+    def get_success_url(self):
+        return '/rotw/{}'.format(self.object.user.id)
 
 
 class RemoveActivityView(DeleteView):
@@ -284,23 +319,23 @@ class PlanDetailsView(View):
         for d in range(1,8):
             day = plan.start_date+datetime.timedelta(days=(d-1))
             day_weekday = day.strftime('%A')
-            day_label = day_weekday+"("+str(day)+")"
+            day_label = day_weekday+" ("+str(day)+")"
             graph_day = []
             for slot in range(14,44):
                 try:
                     a=Schedule.objects.get(plan__id=p_id, slot__day=d, start_time=slot)
                     graph_day.append((
                         day_label,
-                        datetime.timedelta(minutes=slot*30),
+                        time_format(datetime.timedelta(minutes=slot*30)),
                         a.activity.name,
                         a.activity.get_color_display()
                     ))
                 except ObjectDoesNotExist:
                     graph_day.append((
                         day_label,
-                        datetime.timedelta(minutes=slot*30),
+                        time_format(datetime.timedelta(minutes=slot*30)),
                         '',
-                        'white'
+                        'whitesmoke'
                     ))
             graph.append(graph_day)
 

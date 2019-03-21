@@ -1,40 +1,54 @@
 <!-- templates/home.html -->
 {% extends 'base.html' %}
+{% load mathfilters %}
 
-{% block title %}Plans of {{ user }}{% endblock %}
+{% block title %}Plans of {{ user.username }}{% endblock %}
 
 {% block content %}
-
-<p> your plans, {{ user }}: </p>
-<table>
-    <tr>
-        <th> user id </th>
-        <th> plan id </th>
-        <th> starting date </th>
+<p></p>
+<p class="container tom_xlarge"> {{ user.username }}, these are your plans: </p>
+<table class="container table">
+    <tr class="table_header">
+{#        <th> user id </th>#}
+{#        <th> plan id </th>#}
+        <th> plans' start date</th>
         <th> created </th>
-        <th> modified </th>
+        <th> status </th>
+        <th></th>
         <th></th>
     </tr>
 
 {% for p in plans %}
     <tr>
 
-        <td> {{ p.user.id }}</td>
-        <td> {{ p.id }}</td>
+{#        <td> {{ p.user.id }}</td>#}
+{#        <td> {{ p.id }}</td>#}
         <td> {{ p.start_date }}</td>
-        <td> {{ p.created }}</td>
-        <td> {{ p.modified}}</td>
-        <td> <a href="/rotw/{{ p.user.id }}/{{ p.id }}"> edit </a> </td>
+        <td class="smaller_font"> {{ p.created }}</td>
+
+
+            {% if p.start_date > today  %}
+                <td> not started yet </td>
+            {% elif p.start_date < today_min6 %}
+                <td class="back_grey">finished</td>
+            {%  else %}
+                <td class="back_tomato">on-going</td>
+            {% endif %}
+
+
+        <td> <a href="/rotw/{{ p.user.id }}/{{ p.id }}"> go to the plan </a> </td>
+        <td> <a href="/rotw/plan/remove/{{ p.id }}"> delete </a> </td>
     </tr>
 {% endfor %}
 </table>
 
-<p> create a new plan </p>
+<p class="container tom_xlarge"> create a new plan </p>
 <form method="post">
+    <p class="container">
     {%  csrf_token %}
     {{ form }}
-    <input type="submit" value="add">
-
+    <input type="submit" class="back_tomato" value="add">
+    </p>
 </form>
 
 {% endblock %}

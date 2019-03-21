@@ -4,7 +4,7 @@
     color:tomato;
 }
 
-.header_rotweiler{
+.header_rottweiler{
     font-family: 'Syncopate', sans-serif;
     font-size: 60px;
     background-color: tomato;
@@ -54,4 +54,75 @@ div.schedule{
 
 .back_tomato{
     background-color: tomato;
+}
+
+.center {
+    display: table;
+    margin: 0 auto;
+}
+
+.back_grey {
+    background-color: lightgrey;
+}
+.smaller_font {
+    font-size: small;
+}
+
+.f_white {
+    color: white;
+}
+
+.t_center {
+    text-align: center;
+}
+
+.t_larger {
+    font-size: x-large;
+}
+
+.back_cadetblue {
+    background-color: cadetblue;
+}
+
+.button {
+    width:250px;
+    height: 50px;
+}
+
+/*button {*/
+  /*padding: 0;*/
+  /*border: none;*/
+  /*font: inherit;*/
+  /*color: inherit;*/
+  /*background-color: transparent;*/
+  /*!* show a hand cursor on hover; some argue that we*/
+  /*should keep the default arrow cursor for buttons *!*/
+  /*cursor: pointer;*/
+/*}*/
+
+
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: white;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: inline-block;
+  color: tomato;
+  text-align: center;
+  padding: 2px 20px;
+  text-decoration: none;
+}
+
+
+.active {
+  background-color: tomato;
 }

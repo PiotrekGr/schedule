@@ -163,3 +163,8 @@ def create_schedule(tab, available_time):
 #
 # print(create_schedule(activities, 9))
 # print(len(create_schedule(activities, 9)))
+
+
+def time_format(a):
+    split = str(a).split(':')
+    return split[0]+":"+split[1]

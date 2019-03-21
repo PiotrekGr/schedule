@@ -31,7 +31,7 @@
                 <td> {{ a.description}} </td>
                 <td> {{ a.priority}} </td>
                 <td> {{ a.assumed_time}} </td>
-                <td> {{ a.get_color_display }} </td>
+                <td class="smaller_font"> {{ a.get_color_display }} </td>
                 <td> <a href="/rotw/activity/{{ a.id }}"> edit </a> </td>
                 <td> <a href="/rotw/activity/remove/{{ a.id }}"> delete </a> </td>
 
@@ -69,7 +69,7 @@
 
         {% for a in plan_ava %}
             <tr>
-                <td> {{ a.day}} </td>
+                <td> {{ a.day_label}} </td>
                 <td> {{ a.get_start_time_display}} </td>
                 <td> {{ a.get_end_time_display}} </td>
                 <td> {{ a.duration|floatformat:1}} </td>
@@ -84,9 +84,11 @@
 
     <div style="display:inline-block" class="regular">
         <p class="tom_xlarge">add available time slot</p>
+        <p class="smaller_font"> {{ first_day }} is day 1 of the plan </p>
         <form method="post">
         {%  csrf_token %}
         {{ form_ava.as_p }}
+
         <input type="submit" value="add time slot" name="submit" class="back_tomato">
         </form>
 
@@ -94,7 +96,23 @@
 </div>
 
 <p></p>
-    <p class="regular"><a href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}">see the schedule</a></p>
-    <p class="regular"><a href="/rotw/schedule_recalculation/{{ user.id }}/{{ plan.id }}">recalculate the schedule</a></p>
+<p>
+    <a class="button center" href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}?val=true">
+        <button class="button center back_cadetblue t_center f_white">
+            calculate the schedule
+        </button>
+    </a>
+</p>
+<p></p>
+<p>
+    <a class="button center" href="/rotw/schedule_details/{{ user.id }}/{{ plan.id }}">
+        <button class="button center back_grey t_center f_white">
+            go to the schedule (without recalculation)
+        </button>
+    </a>
+</p>
+
+
+{#    <p class="regular"><a href="/rotw/schedule_recalculation/{{ user.id }}/{{ plan.id }}">recalculate the schedule</a></p>#}
 
 {% endblock %}

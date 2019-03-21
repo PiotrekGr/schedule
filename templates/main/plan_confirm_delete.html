@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <p> Are you sure you want to delete following plan? </p>
+        <form action="" method="post">
+        {%  csrf_token %}
+        <p> start: {{ object.start_date}}</p>
+        <input type="submit" value="delete">
+        </form>
+{% endblock %}
+
