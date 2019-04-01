@@ -1,6 +1,8 @@
 import datetime
 
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import request, HttpResponse, HttpResponseRedirect
@@ -21,7 +23,10 @@ class SignUp(generic.CreateView):
     template_name = 'signup.html'
 
 
-class CheckUser(View):
+class CheckUser(UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_superuser
+
     def get(self, request):
         users = User.objects.all()
         session = ' | '.join("{}={}".format(key, val) for (key, val) in request.session.items())
@@ -29,7 +34,12 @@ class CheckUser(View):
         return render(request, "users_list.html", {"users": users, "session": session, "cookies": cookies})
 
 
-class UserView(View):
+class UserView(UserPassesTestMixin, View):
+    def test_func(self):
+        u_id = self.kwargs['id']
+        user_url = User.objects.get(id=u_id)
+        return user_url == self.request.user
+
     def get(self, request, id):
         plans = Plan.objects.filter(user_id=id) # todo wyjaśnić
         today = datetime.date.today()
@@ -52,7 +62,13 @@ class UserView(View):
             return HttpResponse(form.non_field_errors, form.starting_date.errors)
 
 
-class PlanView(View):
+class PlanView(UserPassesTestMixin, View):
+
+    def test_func(self):
+        p_id = self.kwargs['p_id']
+        user_url = Plan.objects.get(id=p_id).user
+        return user_url == self.request.user
+
     def get(self, request, u_id, p_id):
         val = request.GET.get('val')
         if val == "time":
@@ -177,8 +193,12 @@ class PlanView(View):
                                                   'first_day': first_day})
 
 
+class ActivityView(UserPassesTestMixin, View):
+    def test_func(self):
+        u_id = self.kwargs['id']
+        user_url = Activities.objects.get(id=u_id).user
+        return user_url == self.request.user
 
-class ActivityView(View):
     def get(self, request, id):
         activity = Activities.objects.get(id=id)
         form = AddActivity(initial={"name": activity.name,
@@ -209,7 +229,12 @@ class ActivityView(View):
         return HttpResponseRedirect("/rotw/{}/{}".format(user_id, plan_id))
 
 
-class AvailabilityView(View):
+class AvailabilityView(UserPassesTestMixin, View):
+    def test_func(self):
+        u_id = self.kwargs['id']
+        user_url = Availability.objects.get(id=u_id).user
+        return user_url == self.request.user
+
     def get(self, request, id):
         availability = Availability.objects.get(id=id)
         form = AddAvailability(initial={"day": availability.day,
@@ -237,28 +262,49 @@ class AvailabilityView(View):
         return HttpResponseRedirect("/rotw/{}/{}".format(user_id, plan_id))
 
 
-class RemovePlanView(DeleteView):
+class RemovePlanView(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        u_id = self.kwargs['id']
+        user_url = Plan.objects.get(id=u_id).user
+        return user_url == self.request.user
+
     model = Plan
 
     def get_success_url(self):
         return '/rotw/{}'.format(self.object.user.id)
 
 
-class RemoveActivityView(DeleteView):
+class RemoveActivityView(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        u_id = self.kwargs['id']
+        user_url = Activities.objects.get(id=u_id).user
+        return user_url == self.request.user
+
     model = Activities
 
     def get_success_url(self):
         return '/rotw/{}/{}'.format(self.object.user.id, self.object.plan.id)
 
 
-class RemoveAvailabilityView(DeleteView):
+class RemoveAvailabilityView(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        u_id = self.kwargs['id']
+        user_url = Availability.objects.get(id=u_id).user
+        return user_url == self.request.user
+
     model = Availability
 
     def get_success_url(self):
         return '/rotw/{}/{}'.format(self.object.user.id, self.object.plan.id)
 
 
-class PlanDetailsView(View):
+class PlanDetailsView(UserPassesTestMixin, View):
+
+    def test_func(self):
+        p_id = self.kwargs['p_id']
+        user_url = Plan.objects.get(id=p_id).user
+        return user_url == self.request.user
+
     def get(self, request, u_id, p_id):
         val = request.GET.get('val')
         if val == "true":
@@ -346,7 +392,12 @@ class PlanDetailsView(View):
                                                  'activities': activities})
 
 
-class ScheduleRecalculation(View):
+class ScheduleRecalculation(UserPassesTestMixin, View):
+    def test_func(self):
+        u_id = self.kwargs['u_id']
+        user_url = User.objects.get(id=u_id)
+        return user_url == self.request.user
+
     def get(self, request, u_id, p_id):
         activities = Activities.objects.filter(plan_id=p_id)
         availability= Availability.objects.filter(plan_id=p_id)
