@@ -41,7 +41,7 @@ class UserView(UserPassesTestMixin, View):
         return user_url == self.request.user
 
     def get(self, request, id):
-        plans = Plan.objects.filter(user_id=id) # todo wyjaśnić
+        plans = Plan.objects.filter(user_id=id)
         today = datetime.date.today()
         today_min6 = datetime.date.today()-datetime.timedelta(days=7)
         form = AddPlan()
@@ -89,12 +89,6 @@ class PlanView(UserPassesTestMixin, View):
             a.day_label = a.weekday+" ("+str(a.day_date)+")"
             print(a.day_date, a.weekday, a.day_label)
 
-            # day = plan.start_date+datetime.timedelta(days=(d-1))
-            # day_weekday = day.strftime('%A')
-            # day_label = day_weekday+" ("+str(day)+")"
-
-
-
         sum_act = 0
         for a in plan_act:
             sum_act += a.assumed_time
@@ -122,7 +116,7 @@ class PlanView(UserPassesTestMixin, View):
         plan_act = Activities.objects.filter(plan_id=p_id)
         plan_ava = Availability.objects.filter(plan_id=p_id)
         today = datetime.date.today()
-        # activities
+
         user = User.objects.get(id=u_id)
         plan = Plan.objects.get(id=p_id)
         submit = request.POST.get('submit')
@@ -348,18 +342,11 @@ class PlanDetailsView(UserPassesTestMixin, View):
 
             schedule = Schedule.objects.filter(plan_id=p_id)
 
-            # return render(request, "schedule_recalculation.html", {'act_sequence': act_sequence,
-            #                                                        'schedule': schedule,
-            #                                                        'activities': activities,
-            #                                                        'user': user,
-            #                                                        'plan': plan})
-
         activities = Activities.objects.filter(plan_id=p_id)
         schedule = Schedule.objects.filter(plan_id=p_id)
         user = User.objects.get(id=u_id)
         plan = Plan.objects.get(id=p_id)
         day = plan.start_date
-        # day_weekday = datetime.date.weekday(day)
 
         graph = []
         for d in range(1,8):

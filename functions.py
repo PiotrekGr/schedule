@@ -1,5 +1,4 @@
 import random
-from pprint import pprint
 import django
 django.setup()
 
@@ -21,22 +20,12 @@ def basic_time_recalc(activities, available_time, min_priority=1):
     # input: available time
     # input: filter for minimum priority included in the calculation
 
-    # first version
-    # weighted_sum = 0
-    # assumed_sum = 0
-    # for a in activities:
-    #     if a.priority >= min_priority:
-    #         weighted_sum += (10 - a.priority)*a.assumed_time
-    #         assumed_sum += a.assumed_time
-    #     else:
-    #         a.recalculated_time = 0
-
+    weighted_sum = sum((10 - x.priority)*x.assumed_time if x.priority >= min_priority else 0 for x in activities)
+    assumed_sum = sum(x.assumed_time if x.priority >= min_priority else 0 for x in activities)
     # alternative version with lambda
     # weighted_sum_l = sum(map(lambda x: (10 - x.priority)*x.assumed_time if x.priority >= min_priority else 0, activities))
     # assumed_sum_l = sum(map(lambda x: x.assumed_time if x.priority >= min_priority else 0, activities))
 
-    weighted_sum = sum((10 - x.priority)*x.assumed_time if x.priority >= min_priority else 0 for x in activities)
-    assumed_sum = sum(x.assumed_time if x.priority >= min_priority else 0 for x in activities)
 
     missing_time = assumed_sum - available_time
     ratio = missing_time / weighted_sum
@@ -50,14 +39,6 @@ def basic_time_recalc(activities, available_time, min_priority=1):
 def time_recalc(tab, available_time):
     # separate path in case time assigned for priority 10 activities surpasses available time
     #     checking if priority 10 alone exceeds time limit
-
-    # first version
-    # sum_10 = 0
-    # sum_all = 0
-    # for row in tab:
-    #     sum_all+=row.assumed_time
-    #     if row.priority == 10:
-    #         sum_10 += row.assumed_time
 
     sum_all = sum(row.assumed_time for row in tab)
     sum_10 = sum(row.assumed_time if row.priority == 10 else 0 for row in tab)
@@ -84,7 +65,6 @@ def time_recalc(tab, available_time):
         i = 0
         while not finished:
             i += 1
-            # print('iteration', i)
             iter_result = basic_time_recalc(tab, available_time, i)
             any_neg = 0
             for activity in iter_result:
@@ -92,25 +72,12 @@ def time_recalc(tab, available_time):
                     any_neg += 1
             if any_neg == 0:
                 finished = True
-        # for activity in activities:
-        #     print(activity.priority, activity.assumed_time, round(activity.recalculated_time,1))
         return iter_result
-
-
-# print(basic_time_recalc(activities, 20, 2))
-# print(time_recalc(activities, 120))
-#
-# for a in time_recalc(activities, 120):
-#     print(a.priority, a.assumed_time, a.diff, a.recalculated_time)
 
 
 def time_recalc_rounded(tab, available_time):
 
     sum_all = sum(row.assumed_time for row in tab)
-    # first version
-    # sum_all = 0
-    # for row in tab:
-    #     sum_all += row.assumed_time
 
     if sum_all < available_time:
         for row in tab:
@@ -129,9 +96,6 @@ def time_recalc_rounded(tab, available_time):
             a.recalculated_time_rounded = round((a.recalculated_time*2),0)/2
             a.round_diff = a.recalculated_time_rounded - a.recalculated_time
             sum_time_rounded += a.recalculated_time_rounded
-        # checking sum after rounding
-        # print('initial', available_time)
-        # print('rounded', sum_time_rounded)
 
         while available_time != sum_time_rounded:
             diff_max = 0
@@ -171,18 +135,7 @@ def create_schedule(tab, available_time):
             schedule.append(a.id)
     random.shuffle(schedule)
     return schedule
-#
-# time_recalc_rounded(activities, 131)
 
-# for a in create_schedule(activities, 45):
-#     print(a.activity_id)
-
-#
-# print(create_schedule(activities, 9))
-# print(len(create_schedule(activities, 9)))
-
-
-time_recalc(activities, 100)
 
 def time_format(a):
     split = str(a).split(':')
