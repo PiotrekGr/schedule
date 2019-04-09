@@ -17,6 +17,14 @@ from main.forms import AddPlan, AddActivity, AddAvailability
 from main.models import Plan, Activities, Availability, Schedule
 
 
+FIRST_DAY_OF_PLAN = 1
+LAST_DAY_OF_PLAN = 7
+DAYS_OF_PLAN = range(FIRST_DAY_OF_PLAN, LAST_DAY_OF_PLAN + 1)
+
+TIME_7_00 = 14
+TIME_22_00 = 44
+DAILY_TIMETABLE = range(TIME_7_00, TIME_22_00)
+
 class SignUp(generic.CreateView):
     form_class = UserCreationForm
     success_url = reverse_lazy('login')
@@ -83,19 +91,18 @@ class PlanView(UserPassesTestMixin, View):
         plan = Plan.objects.get(id=p_id)
         today = datetime.date.today()
 
-        for a in plan_ava:
-            a.day_date = a.plan.start_date + datetime.timedelta(days=(a.day-1))
-            a.weekday = a.day_date.strftime('%A')
-            a.day_label = a.weekday + " (" + str(a.day_date) + ")"
-            # print(a.day_date, a.weekday, a.day_label)
+        for availability_slot in plan_ava:
+            availability_slot.date = availability_slot.plan.start_date + datetime.timedelta(days=(availability_slot.day-1))
+            availability_slot.weekday = availability_slot.date.strftime('%A')
+            availability_slot.day_label = availability_slot.weekday + " (" + str(availability_slot.date) + ")"
 
         sum_act = 0
-        for a in plan_act:
-            sum_act += a.assumed_time
+        for activity in plan_act:
+            sum_act += activity.assumed_time
 
         sum_ava = 0
-        for a in plan_ava:
-            sum_ava += a.duration
+        for availability_slot in plan_ava:
+            sum_ava += availability_slot.duration
 
         f_weekday = plan.start_date.strftime('%A')
         first_day = f_weekday + " (" + str(plan.start_date) + ")"
@@ -165,12 +172,12 @@ class PlanView(UserPassesTestMixin, View):
             form_ava = AddAvailability()
 
         sum_act = 0
-        for a in plan_act:
-            sum_act += a.assumed_time
+        for activity in plan_act:
+            sum_act += activity.assumed_time
 
         sum_ava = 0
-        for a in plan_ava:
-            sum_ava += a.duration
+        for availability_slot in plan_ava:
+            sum_ava += availability_slot.duration
 
         f_weekday = plan.start_date.strftime('%A')
         first_day = f_weekday + " (" + str(plan.start_date) + ")"
@@ -308,8 +315,8 @@ class PlanDetailsView(UserPassesTestMixin, View):
             plan = Plan.objects.get(id=p_id)
 
             sum_ava = 0
-            for slot in availability:
-                sum_ava += slot.duration
+            for availability_slot in availability:
+                sum_ava += availability_slot.duration
             act_sequence = create_schedule(activities, sum_ava)
 
             if sum_ava > len(act_sequence) / 2:
@@ -326,16 +333,16 @@ class PlanDetailsView(UserPassesTestMixin, View):
 
             # wypełnij schedule
             j = 0
-            for slot in availability:
-                for i in range(int(slot.duration * 2)):
+            for availability_slot in availability:
+                for i in range(int(availability_slot.duration * 2)):
                     act = Activities.objects.get(id=act_sequence[j])
                     j += 1
                     Schedule.objects.create(user=user,
                                             plan=plan,
-                                            slot=slot,
+                                            slot=availability_slot,
                                             order=i,
                                             activity=act,
-                                            start_time=slot.start_time + i,
+                                            start_time=availability_slot.start_time + i,
                                             duration=0.5)
                     act.applied_time = act.applied_time + 0.5
                     act.save()
@@ -349,24 +356,26 @@ class PlanDetailsView(UserPassesTestMixin, View):
         day = plan.start_date
 
         graph = []
-        for d in range(1,8):
-            day = plan.start_date+datetime.timedelta(days=(d-1))
+        for day_of_plan in DAYS_OF_PLAN:
+            day = plan.start_date+datetime.timedelta(days=(day_of_plan-1))
             day_weekday = day.strftime('%A')
             day_label = day_weekday+" ("+str(day)+")"
             graph_day = []
-            for slot in range(14,44):
+            for half_hour_slot in DAILY_TIMETABLE:
                 try:
-                    a = Schedule.objects.get(plan__id=p_id, slot__day=d, start_time=slot)
+                    scheduled_activity = Schedule.objects.get(plan__id=p_id,
+                                                              slot__day=day_of_plan,
+                                                              start_time=half_hour_slot)
                     graph_day.append((
                         day_label,
-                        time_format(datetime.timedelta(minutes=slot*30)),
-                        a.activity.name,
-                        a.activity.get_color_display()
+                        time_format(datetime.timedelta(minutes=half_hour_slot*30)),
+                        scheduled_activity.activity.name,
+                        scheduled_activity.activity.get_color_display()
                     ))
                 except ObjectDoesNotExist:
                     graph_day.append((
                         day_label,
-                        time_format(datetime.timedelta(minutes=slot*30)),
+                        time_format(datetime.timedelta(minutes=half_hour_slot*30)),
                         '',
                         'whitesmoke'
                     ))
