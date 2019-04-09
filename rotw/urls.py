@@ -20,7 +20,7 @@ from django.conf.urls import url
 
 
 from main.views import CheckUser, UserView, PlanView, ActivityView, RemoveActivityView, RemoveAvailabilityView, \
-    AvailabilityView, PlanDetailsView, ScheduleRecalculation, RemovePlanView
+    AvailabilityView, PlanDetailsView, RemovePlanView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,5 +37,5 @@ urlpatterns = [
     url(r'^rotw/activity/remove/(?P<pk>(\d)+)$', RemoveActivityView.as_view()),
     url(r'^rotw/availability/remove/(?P<pk>(\d)+)$', RemoveAvailabilityView.as_view()),
     url(r'^rotw/schedule_details/(?P<u_id>(\d)+)/(?P<p_id>(\d)+)$', PlanDetailsView.as_view()),
-    url(r'^rotw/schedule_recalculation/(?P<u_id>(\d)+)/(?P<p_id>(\d)+)$', ScheduleRecalculation.as_view()),
+    # url(r'^rotw/schedule_recalculation/(?P<u_id>(\d)+)/(?P<p_id>(\d)+)$', ScheduleRecalculation.as_view()),
 ]

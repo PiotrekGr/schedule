@@ -43,7 +43,7 @@ class UserView(UserPassesTestMixin, View):
     def get(self, request, id):
         plans = Plan.objects.filter(user_id=id)
         today = datetime.date.today()
-        today_min6 = datetime.date.today()-datetime.timedelta(days=7)
+        today_min6 = today - datetime.timedelta(days=7)
         form = AddPlan()
         return render(request, 'user_summary.html', {'plans': plans,
                                                      'user': User.objects.get(id=id),
@@ -86,19 +86,19 @@ class PlanView(UserPassesTestMixin, View):
         for a in plan_ava:
             a.day_date = a.plan.start_date + datetime.timedelta(days=(a.day-1))
             a.weekday = a.day_date.strftime('%A')
-            a.day_label = a.weekday+" ("+str(a.day_date)+")"
-            print(a.day_date, a.weekday, a.day_label)
+            a.day_label = a.weekday + " (" + str(a.day_date) + ")"
+            # print(a.day_date, a.weekday, a.day_label)
 
         sum_act = 0
         for a in plan_act:
             sum_act += a.assumed_time
 
-        sum_ava =0
+        sum_ava = 0
         for a in plan_ava:
             sum_ava += a.duration
 
         f_weekday = plan.start_date.strftime('%A')
-        first_day = f_weekday+" ("+str(plan.start_date)+")"
+        first_day = f_weekday + " (" + str(plan.start_date) + ")"
 
         return render(request, 'plan_view.html', {'plan_act': plan_act,
                                                   'plan_ava': plan_ava,
@@ -156,7 +156,7 @@ class PlanView(UserPassesTestMixin, View):
                                             day=day,
                                             start_time=start_time,
                                             end_time=end_time,
-                                            duration=(int(end_time)-int(start_time))/2
+                                            duration=(int(end_time) - int(start_time)) / 2
                                             )
                 form_ava_status = 'valid'
             else:
@@ -168,12 +168,12 @@ class PlanView(UserPassesTestMixin, View):
         for a in plan_act:
             sum_act += a.assumed_time
 
-        sum_ava =0
+        sum_ava = 0
         for a in plan_ava:
             sum_ava += a.duration
 
         f_weekday = plan.start_date.strftime('%A')
-        first_day = f_weekday+" ("+str(plan.start_date)+")"
+        first_day = f_weekday + " (" + str(plan.start_date) + ")"
 
         return render(request, 'plan_view.html', {'plan_act': plan_act,
                                                   'form_act': form_act,
@@ -215,10 +215,10 @@ class ActivityView(UserPassesTestMixin, View):
             assumed_time = form.cleaned_data['assumed_time']
             color = form.cleaned_data['color']
             activity.name = name
-            activity.description= description
-            activity.priority= priority
-            activity.assumed_time= assumed_time
-            activity.color= color
+            activity.description = description
+            activity.priority = priority
+            activity.assumed_time = assumed_time
+            activity.color = color
             activity.save()
         return HttpResponseRedirect("/rotw/{}/{}".format(user_id, plan_id))
 
@@ -248,17 +248,17 @@ class AvailabilityView(UserPassesTestMixin, View):
             day = form.cleaned_data['day']
             start_time = form.cleaned_data['start_time']
             end_time = form.cleaned_data['end_time']
-            availability.day= day
-            availability.start_time= start_time
-            availability.end_time= end_time
-            availability.duration =(int(end_time)-int(start_time))/2
+            availability.day = day
+            availability.start_time = start_time
+            availability.end_time = end_time
+            availability.duration = (int(end_time) - int(start_time)) / 2
             availability.save()
         return HttpResponseRedirect("/rotw/{}/{}".format(user_id, plan_id))
 
 
 class RemovePlanView(UserPassesTestMixin, DeleteView):
     def test_func(self):
-        u_id = self.kwargs['id']
+        u_id = self.kwargs['pk']
         user_url = Plan.objects.get(id=u_id).user
         return user_url == self.request.user
 
@@ -270,7 +270,7 @@ class RemovePlanView(UserPassesTestMixin, DeleteView):
 
 class RemoveActivityView(UserPassesTestMixin, DeleteView):
     def test_func(self):
-        u_id = self.kwargs['id']
+        u_id = self.kwargs['pk']
         user_url = Activities.objects.get(id=u_id).user
         return user_url == self.request.user
 
@@ -282,7 +282,7 @@ class RemoveActivityView(UserPassesTestMixin, DeleteView):
 
 class RemoveAvailabilityView(UserPassesTestMixin, DeleteView):
     def test_func(self):
-        u_id = self.kwargs['id']
+        u_id = self.kwargs['pk']
         user_url = Availability.objects.get(id=u_id).user
         return user_url == self.request.user
 
@@ -312,7 +312,7 @@ class PlanDetailsView(UserPassesTestMixin, View):
                 sum_ava += slot.duration
             act_sequence = create_schedule(activities, sum_ava)
 
-            if sum_ava > len(act_sequence)/2:
+            if sum_ava > len(act_sequence) / 2:
                 return HttpResponseRedirect('/rotw/{}/{}?val=time'.format(user.id, plan.id))
 
             for a in activities:
@@ -356,7 +356,7 @@ class PlanDetailsView(UserPassesTestMixin, View):
             graph_day = []
             for slot in range(14,44):
                 try:
-                    a=Schedule.objects.get(plan__id=p_id, slot__day=d, start_time=slot)
+                    a = Schedule.objects.get(plan__id=p_id, slot__day=d, start_time=slot)
                     graph_day.append((
                         day_label,
                         time_format(datetime.timedelta(minutes=slot*30)),
@@ -379,54 +379,54 @@ class PlanDetailsView(UserPassesTestMixin, View):
                                                  'activities': activities})
 
 
-class ScheduleRecalculation(UserPassesTestMixin, View):
-    def test_func(self):
-        u_id = self.kwargs['u_id']
-        user_url = User.objects.get(id=u_id)
-        return user_url == self.request.user
-
-    def get(self, request, u_id, p_id):
-        activities = Activities.objects.filter(plan_id=p_id)
-        availability= Availability.objects.filter(plan_id=p_id)
-        user = User.objects.get(id=u_id)
-        plan = Plan.objects.get(id=p_id)
-
-        sum_ava = 0
-        for slot in availability:
-            sum_ava += slot.duration
-        act_sequence = create_schedule(activities, sum_ava)
-
-        for a in activities:
-            a.applied_time = 0
-            a.save()
-
-        # usuń poprzedni schedule - do uzupełnienia
-
-        to_delete = Schedule.objects.filter(plan_id=p_id)
-        to_delete.delete()
-
-
-        # wypełnij schedule
-        j = 0
-        for slot in availability:
-            for i in range(int(slot.duration*2)):
-                act = Activities.objects.get(id=act_sequence[j])
-                j += 1
-                Schedule.objects.create(user=user,
-                                        plan=plan,
-                                        slot=slot,
-                                        order=i,
-                                        activity=act,
-                                        start_time=slot.start_time+i,
-                                        duration=0.5)
-                act.applied_time = act.applied_time + 0.5
-                act.save()
-
-        schedule = Schedule.objects.filter(plan_id=p_id)
-        activities = Activities.objects.filter(plan_id=p_id)
-
-        return render(request, "schedule_recalculation.html", {'act_sequence': act_sequence,
-                                                               'schedule': schedule,
-                                                               'activities': activities,
-                                                               'user': user,
-                                                               'plan': plan})
+# class ScheduleRecalculation(UserPassesTestMixin, View):
+#     def test_func(self):
+#         u_id = self.kwargs['u_id']
+#         user_url = User.objects.get(id=u_id)
+#         return user_url == self.request.user
+#
+#     def get(self, request, u_id, p_id):
+#         activities = Activities.objects.filter(plan_id=p_id)
+#         availability= Availability.objects.filter(plan_id=p_id)
+#         user = User.objects.get(id=u_id)
+#         plan = Plan.objects.get(id=p_id)
+#
+#         sum_ava = 0
+#         for slot in availability:
+#             sum_ava += slot.duration
+#         act_sequence = create_schedule(activities, sum_ava)
+#
+#         for a in activities:
+#             a.applied_time = 0
+#             a.save()
+#
+#         # usuń poprzedni schedule - do uzupełnienia
+#
+#         to_delete = Schedule.objects.filter(plan_id=p_id)
+#         to_delete.delete()
+#
+#
+#         # wypełnij schedule
+#         j = 0
+#         for slot in availability:
+#             for i in range(int(slot.duration*2)):
+#                 act = Activities.objects.get(id=act_sequence[j])
+#                 j += 1
+#                 Schedule.objects.create(user=user,
+#                                         plan=plan,
+#                                         slot=slot,
+#                                         order=i,
+#                                         activity=act,
+#                                         start_time=slot.start_time+i,
+#                                         duration=0.5)
+#                 act.applied_time = act.applied_time + 0.5
+#                 act.save()
+#
+#         schedule = Schedule.objects.filter(plan_id=p_id)
+#         activities = Activities.objects.filter(plan_id=p_id)
+#
+#         return render(request, "schedule_recalculation.html", {'act_sequence': act_sequence,
+#                                                                'schedule': schedule,
+#                                                                'activities': activities,
+#                                                                'user': user,
+#                                                                'plan': plan})

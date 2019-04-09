@@ -4,10 +4,19 @@ django.setup()
 
 from main.models import Activities
 
-activities = Activities.objects.filter(plan_id=2)
+# activities = Activities.objects.filter(plan_id=2)
+
+MAX_PRIORITY = 10
+VALUE_FOR_EXCLUDED_ELEMENTS = 0
+ANY_LARGE_NUMBER = 10000
+HALF_HOUR_BLOCK = 0.5
 
 
-def basic_time_recalc(activities, available_time, min_priority=1):
+def reverse_priority(priority):
+    return MAX_PRIORITY - priority
+
+
+def base_time_reduction(activities, available_time, minimum_included_priority=1):
     # aim:  reducing time assigned to specific activities (assumed_time) due to overall
     #       lack of time (available_time) proportionally to priority, e.g. 5% time reduction for priority 9,
     #       10% for priority 8, 15% for priority 7 and so on - in order to eventually match available time and
@@ -20,82 +29,101 @@ def basic_time_recalc(activities, available_time, min_priority=1):
     # input: available time
     # input: filter for minimum priority included in the calculation
 
-    weighted_sum = sum((10 - x.priority)*x.assumed_time if x.priority >= min_priority else 0 for x in activities)
-    assumed_sum = sum(x.assumed_time if x.priority >= min_priority else 0 for x in activities)
-    # alternative version with lambda
-    # weighted_sum_l = sum(map(lambda x: (10 - x.priority)*x.assumed_time if x.priority >= min_priority else 0, activities))
-    # assumed_sum_l = sum(map(lambda x: x.assumed_time if x.priority >= min_priority else 0, activities))
+    assumed_time_sum = sum(activity.assumed_time
+                           if activity.priority >= minimum_included_priority
+                           else VALUE_FOR_EXCLUDED_ELEMENTS for activity in activities)
 
+    assumed_time_weighted_sum = sum(reverse_priority(activity.priority) * activity.assumed_time
+                                    if activity.priority >= minimum_included_priority 
+                                    else VALUE_FOR_EXCLUDED_ELEMENTS for activity in activities)
 
-    missing_time = assumed_sum - available_time
-    ratio = missing_time / weighted_sum
-    for a in activities:
-        if a.priority >= min_priority:
-            a.diff = ratio * (10 - a.priority)*a.assumed_time
-            a.recalculated_time = a.assumed_time - a.diff
+    missing_time = assumed_time_sum - available_time
+    base_reduction_ratio = missing_time / assumed_time_weighted_sum
+
+    for activity in activities:
+        if activity.priority >= minimum_included_priority:
+            activity.time_reduction = base_reduction_ratio * reverse_priority(activity.priority) * activity.assumed_time
+            activity.recalculated_time = activity.assumed_time - activity.time_reduction
+
     return activities
 
 
-def time_recalc(tab, available_time):
+def no_time_reduction(activities):
+    for activity in activities:
+        activity.recalculated_time = activity.assumed_time
+    return activities
+
+
+def max_priority_time_reduction(activities, available_time, assumed_time_sum_max_priority):
+    reduction_ratio = available_time / assumed_time_sum_max_priority
+    for activity in activities:
+        if activity.priority == MAX_PRIORITY:
+            activity.recalculated_time = activity.assumed_time * reduction_ratio
+            activity.diff = activity.assumed_time - activity.recalculated_time
+        else:
+            activity.recalculated_time = VALUE_FOR_EXCLUDED_ELEMENTS
+            activity.diff = VALUE_FOR_EXCLUDED_ELEMENTS
+    return activities
+
+
+def time_reduction_positive_outcomes(activities, available_time):
+    outcome_with_positive_figures = False
+    priority_threshold = 0
+    while not outcome_with_positive_figures:
+        priority_threshold += 1
+        activities_recalculated = base_time_reduction(activities, available_time, priority_threshold)
+        any_negative_figures = 0
+        for activity in activities_recalculated:
+            if activity.recalculated_time < 0:
+                any_negative_figures += 1
+        if any_negative_figures == 0:
+            outcome_with_positive_figures = True
+    return activities_recalculated
+
+
+def time_recalculation(activities, available_time):
     # separate path in case time assigned for priority 10 activities surpasses available time
     #     checking if priority 10 alone exceeds time limit
 
-    sum_all = sum(row.assumed_time for row in tab)
-    sum_10 = sum(row.assumed_time if row.priority == 10 else 0 for row in tab)
+    assumed_time_sum_all_priorities = sum(activity.assumed_time for activity in activities)
+    assumed_time_sum_max_priority = sum(activity.assumed_time if activity.priority == MAX_PRIORITY
+                                        else VALUE_FOR_EXCLUDED_ELEMENTS
+                                        for activity in activities)
 
     #   if yes, time assigned for priority 10 gets reduced,
     #   whereas time assigned for remaining activities goes down to zero
-    if sum_10 > available_time:
-        reduction_ratio = available_time/sum_10
-        for row in tab:
-            if row.priority == 10:
-                row.recalculated_time = row.assumed_time*reduction_ratio
-                row.diff = row.assumed_time-row.recalculated_time
-            else:
-                row.recalculated_time = 0
-                row.diff = 0
-        return tab
-    elif sum_all < available_time:
-        for row in tab:
-            row.recalculated_time=row.assumed_time
-        return tab
-# if there is still space for activities with lower priorities
+    if assumed_time_sum_max_priority > available_time:
+        return max_priority_time_reduction(activities, available_time, assumed_time_sum_max_priority)
+
+    elif assumed_time_sum_all_priorities < available_time:
+        return no_time_reduction(activities)
+
     else:
-        finished = False
-        i = 0
-        while not finished:
-            i += 1
-            iter_result = basic_time_recalc(tab, available_time, i)
-            any_neg = 0
-            for activity in iter_result:
-                if activity.recalculated_time < 0:
-                    any_neg += 1
-            if any_neg == 0:
-                finished = True
-        return iter_result
+        return time_reduction_positive_outcomes(activities, available_time)
 
 
-def time_recalc_rounded(tab, available_time):
+def time_recalculation_rounded(activities, available_time):
 
-    sum_all = sum(row.assumed_time for row in tab)
+    assumed_time_sum_all_priorities = sum(activity.assumed_time for activity in activities)
 
-    if sum_all < available_time:
-        for row in tab:
-            row.recalculated_time = row.assumed_time
-            row.recalculated_time_rounded=row.recalculated_time
-        return tab
-    elif sum_all == available_time:
-        for row in tab:
-            row.recalculated_time = row.assumed_time
-            row.recalculated_time_rounded=row.recalculated_time
-        return tab
+    if assumed_time_sum_all_priorities < available_time:
+        for activity in activities:
+            activity.recalculated_time = activity.assumed_time
+            activity.recalculated_time_rounded = activity.recalculated_time
+        return activities
+
+    elif assumed_time_sum_all_priorities == available_time:
+        for activity in activities:
+            activity.recalculated_time = activity.assumed_time
+            activity.recalculated_time_rounded = activity.recalculated_time
+        return activities
     else:
-        initial_result = time_recalc(tab, available_time)
+        activities_recalculated = time_recalculation(activities, available_time)
         sum_time_rounded = 0
-        for a in initial_result:
-            a.recalculated_time_rounded = round((a.recalculated_time*2),0)/2
-            a.round_diff = a.recalculated_time_rounded - a.recalculated_time
-            sum_time_rounded += a.recalculated_time_rounded
+        for activity in activities_recalculated:
+            activity.recalculated_time_rounded = round((activity.recalculated_time * 2),0) / 2
+            activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
+            sum_time_rounded += activity.recalculated_time_rounded
 
         while available_time != sum_time_rounded:
             diff_max = 0
@@ -103,34 +131,34 @@ def time_recalc_rounded(tab, available_time):
 
             # max and min is corrected by assigned priority - in order to adjust in accorh activities' importance in case of
             # equal difference resulting from rounding
-            for a in initial_result:
-                diff_max = max(diff_max, a.round_diff - a.priority/10000)
-                diff_min = min(diff_min, a.round_diff - a.priority/10000)
+            for activity in activities_recalculated:
+                diff_max = max(diff_max, activity.round_diff - activity.priority / ANY_LARGE_NUMBER)
+                diff_min = min(diff_min, activity.round_diff - activity.priority / ANY_LARGE_NUMBER)
 
             if sum_time_rounded > available_time:
-                for a in initial_result:
-                    if (a.round_diff - a.priority/10000) == diff_max:
-                        a.recalculated_time_rounded -= 0.5
-                        a.round_diff = a.recalculated_time_rounded - a.recalculated_time
-                        sum_time_rounded -= 0.5
+                for activity in activities_recalculated:
+                    if (activity.round_diff - activity.priority / ANY_LARGE_NUMBER) == diff_max:
+                        activity.recalculated_time_rounded -= HALF_HOUR_BLOCK
+                        activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
+                        sum_time_rounded -= HALF_HOUR_BLOCK
                         break
 
             if sum_time_rounded < available_time:
-                for a in initial_result:
-                    if (a.round_diff - a.priority/10000) == diff_min:
-                        a.recalculated_time_rounded += 0.5
-                        a.round_diff = a.recalculated_time_rounded - a.recalculated_time
-                        sum_time_rounded += 0.5
+                for activity in activities_recalculated:
+                    if (activity.round_diff - activity.priority / ANY_LARGE_NUMBER) == diff_min:
+                        activity.recalculated_time_rounded += HALF_HOUR_BLOCK
+                        activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
+                        sum_time_rounded += HALF_HOUR_BLOCK
                         break
 
-        return initial_result
+        return activities_recalculated
 
 
 def create_schedule(tab, available_time):
-    result = time_recalc_rounded(tab, available_time)
+    result = time_recalculation_rounded(tab, available_time)
     schedule = []
     for a in result:
-        repeat = int(a.recalculated_time_rounded*2)
+        repeat = int(a.recalculated_time_rounded * 2)
         for i in range(repeat):
             schedule.append(a.id)
     random.shuffle(schedule)

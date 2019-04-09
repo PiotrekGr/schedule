@@ -23,7 +23,6 @@ COLORS = (          # todo przygotować paletę kolorów https://farbelous.io/bo
 TIME = [(i, datetime.timedelta(minutes=i*30)) for i in range(14,45)]
 
 
-
 class Plan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     start_date = models.DateField()
