@@ -9,7 +9,8 @@ from main.models import Activities
 MAX_PRIORITY = 10
 VALUE_FOR_EXCLUDED_ELEMENTS = 0
 ANY_LARGE_NUMBER = 10000
-HALF_HOUR_BLOCK = 0.5
+HALF_HOUR_BLOCK_DURATION = 0.5
+HALF_HOUR_BLOCKS_IN_ONE_HOUR = 2
 
 
 def reverse_priority(priority):
@@ -102,65 +103,72 @@ def time_recalculation(activities, available_time):
         return time_reduction_positive_outcomes(activities, available_time)
 
 
+def round_time(activities):
+    sum_time_rounded = 0
+    for activity in activities:
+        activity.recalculated_time_rounded = round((activity.recalculated_time * 2), 0) / 2
+        activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
+        sum_time_rounded += activity.recalculated_time_rounded
+    return activities, sum_time_rounded
+
+
+def rounding_subtract_half_hour(activities, diff_max, sum_time_rounded):
+    for activity in activities:
+        if (activity.round_diff - activity.priority / ANY_LARGE_NUMBER) == diff_max:
+            activity.recalculated_time_rounded -= HALF_HOUR_BLOCK_DURATION
+            activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
+            sum_time_rounded -= HALF_HOUR_BLOCK_DURATION
+            break
+    return activities, sum_time_rounded
+
+
+def rounding_add_half_hour(activities, diff_min, sum_time_rounded):
+    for activity in activities:
+        if (activity.round_diff - activity.priority / ANY_LARGE_NUMBER) == diff_min:
+            activity.recalculated_time_rounded += HALF_HOUR_BLOCK_DURATION
+            activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
+            sum_time_rounded += HALF_HOUR_BLOCK_DURATION
+            break
+    return activities, sum_time_rounded
+
+
 def time_recalculation_rounded(activities, available_time):
-
     assumed_time_sum_all_priorities = sum(activity.assumed_time for activity in activities)
-
-    if assumed_time_sum_all_priorities < available_time:
+    if assumed_time_sum_all_priorities <= available_time:
         for activity in activities:
-            activity.recalculated_time = activity.assumed_time
-            activity.recalculated_time_rounded = activity.recalculated_time
-        return activities
-
-    elif assumed_time_sum_all_priorities == available_time:
-        for activity in activities:
-            activity.recalculated_time = activity.assumed_time
             activity.recalculated_time_rounded = activity.recalculated_time
         return activities
     else:
         activities_recalculated = time_recalculation(activities, available_time)
-        sum_time_rounded = 0
-        for activity in activities_recalculated:
-            activity.recalculated_time_rounded = round((activity.recalculated_time * 2),0) / 2
-            activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
-            sum_time_rounded += activity.recalculated_time_rounded
+        activities_recalculated, sum_time_rounded = round_time(activities_recalculated)
 
         while available_time != sum_time_rounded:
             diff_max = 0
             diff_min = 0
-
-            # max and min is corrected by assigned priority - in order to adjust in accorh activities' importance in case of
-            # equal difference resulting from rounding
+            # max and min is corrected by assigned priority - in order to adjust in accordance with
+            # activities' importance in case of equal difference resulting from rounding
             for activity in activities_recalculated:
                 diff_max = max(diff_max, activity.round_diff - activity.priority / ANY_LARGE_NUMBER)
                 diff_min = min(diff_min, activity.round_diff - activity.priority / ANY_LARGE_NUMBER)
 
             if sum_time_rounded > available_time:
-                for activity in activities_recalculated:
-                    if (activity.round_diff - activity.priority / ANY_LARGE_NUMBER) == diff_max:
-                        activity.recalculated_time_rounded -= HALF_HOUR_BLOCK
-                        activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
-                        sum_time_rounded -= HALF_HOUR_BLOCK
-                        break
+                activities_recalculated, sum_time_rounded = \
+                    rounding_subtract_half_hour(activities_recalculated, diff_max, sum_time_rounded)
 
             if sum_time_rounded < available_time:
-                for activity in activities_recalculated:
-                    if (activity.round_diff - activity.priority / ANY_LARGE_NUMBER) == diff_min:
-                        activity.recalculated_time_rounded += HALF_HOUR_BLOCK
-                        activity.round_diff = activity.recalculated_time_rounded - activity.recalculated_time
-                        sum_time_rounded += HALF_HOUR_BLOCK
-                        break
+                activities_recalculated, sum_time_rounded = \
+                    rounding_add_half_hour(activities_recalculated, diff_min, sum_time_rounded)
 
         return activities_recalculated
 
 
-def create_schedule(tab, available_time):
-    result = time_recalculation_rounded(tab, available_time)
+def create_schedule(activities, available_time):
+    result = time_recalculation_rounded(activities, available_time)
     schedule = []
-    for a in result:
-        repeat = int(a.recalculated_time_rounded * 2)
-        for i in range(repeat):
-            schedule.append(a.id)
+    for activity in result:
+        number_of_half_hour_blocks = int(activity.recalculated_time_rounded * HALF_HOUR_BLOCKS_IN_ONE_HOUR)
+        for i in range(number_of_half_hour_blocks):
+            schedule.append(activity.id)
     random.shuffle(schedule)
     return schedule
 

@@ -12,7 +12,7 @@ from django.urls import reverse_lazy
 from django.views import generic, View
 from django.views.generic import DeleteView
 
-from functions import create_schedule, time_recalc_rounded, basic_time_recalc, time_format
+from functions import create_schedule, time_recalculation_rounded, base_time_reduction, time_format
 from main.forms import AddPlan, AddActivity, AddAvailability
 from main.models import Plan, Activities, Availability, Schedule
 
